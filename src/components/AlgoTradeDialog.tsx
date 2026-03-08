@@ -1,11 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, CheckCircle2, XCircle, Zap, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Zap, ArrowRight, ArrowLeft, Code } from 'lucide-react';
+
+interface Strategy {
+  id: string;
+  name: string;
+  description: string | null;
+  code: string;
+  created_at: string;
+}
 
 interface AlgoTradeDialogProps {
   open: boolean;
@@ -14,7 +22,7 @@ interface AlgoTradeDialogProps {
   symbol: string;
 }
 
-type Step = 'settings' | 'credentials' | 'verifying' | 'verified' | 'error';
+type Step = 'strategy' | 'credentials' | 'verifying' | 'verified' | 'error';
 
 const ALGO_TIMEFRAMES = ['1m', '3m', '5m', '15m', '30m', '1H', '4H', '1D'];
 const SIGNAL_TYPES = [
@@ -23,14 +31,15 @@ const SIGNAL_TYPES = [
   { value: 'sell', label: 'Sell Only', desc: 'Only exit / short positions' },
 ];
 
-export default function AlgoTradeDialog({ open, onClose, strategyName, symbol }: AlgoTradeDialogProps) {
-  const [step, setStep] = useState<Step>('settings');
+export default function AlgoTradeDialog({ open, onClose, symbol }: AlgoTradeDialogProps) {
+  const [step, setStep] = useState<Step>('strategy');
+  const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [loadingStrategies, setLoadingStrategies] = useState(true);
   
-  // Settings step
+  // Strategy selection step
+  const [selectedStrategyId, setSelectedStrategyId] = useState<string>('');
   const [algoTimeframe, setAlgoTimeframe] = useState('5m');
   const [signalType, setSignalType] = useState('both');
-  const [stopLoss, setStopLoss] = useState('1');
-  const [target, setTarget] = useState('2');
   const [quantity, setQuantity] = useState('1');
 
   // Credentials step
@@ -45,12 +54,27 @@ export default function AlgoTradeDialog({ open, onClose, strategyName, symbol }:
   const [userName, setUserName] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  const selectedStrategy = strategies.find(s => s.id === selectedStrategyId);
+
+  const fetchStrategies = async () => {
+    setLoadingStrategies(true);
+    const { data, error } = await supabase
+      .from('strategies')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && data) setStrategies(data);
+    setLoadingStrategies(false);
+  };
+
+  useEffect(() => {
+    if (open) fetchStrategies();
+  }, [open]);
+
   const resetForm = () => {
-    setStep('settings');
+    setStep('strategy');
+    setSelectedStrategyId('');
     setAlgoTimeframe('5m');
     setSignalType('both');
-    setStopLoss('1');
-    setTarget('2');
     setQuantity('1');
     setApiKey('');
     setClientCode('');
@@ -98,9 +122,10 @@ export default function AlgoTradeDialog({ open, onClose, strategyName, symbol }:
 
   const handleStartTrading = () => {
     // In a real implementation, this would start the algo trading loop
-    // For now, show confirmation and close
     handleClose();
   };
+
+  const canProceedToCredentials = selectedStrategyId && quantity;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
@@ -111,19 +136,60 @@ export default function AlgoTradeDialog({ open, onClose, strategyName, symbol }:
             Start Algo Trading
           </DialogTitle>
           <DialogDescription className="text-muted-foreground text-xs">
-            Configure and connect to trade <span className="text-primary font-mono">{strategyName || 'strategy'}</span> on <span className="text-primary font-mono">{symbol}</span>.
+            Select a backtested strategy to run on <span className="text-primary font-mono">{symbol}</span>
           </DialogDescription>
         </DialogHeader>
 
-        {/* Step 1: Algo Settings */}
-        {step === 'settings' && (
+        {/* Step 1: Strategy Selection */}
+        {step === 'strategy' && (
           <div className="space-y-4 py-2">
             <div className="space-y-3">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Timeframe & Signal</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Select Strategy</p>
               
-              <div className="grid grid-cols-2 gap-3">
+              {loadingStrategies ? (
+                <div className="flex items-center justify-center h-20 text-muted-foreground text-sm">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />Loading strategies...
+                </div>
+              ) : strategies.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-20 gap-2 bg-secondary/30 rounded-md">
+                  <Code className="h-6 w-6 text-muted-foreground/50" />
+                  <p className="text-xs text-muted-foreground">No strategies saved. Create one first in Strategy Manager.</p>
+                </div>
+              ) : (
+                <Select value={selectedStrategyId} onValueChange={setSelectedStrategyId}>
+                  <SelectTrigger className="h-10 text-sm font-mono bg-secondary border-border">
+                    <SelectValue placeholder="Choose a strategy..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border">
+                    {strategies.map(s => (
+                      <SelectItem key={s.id} value={s.id} className="text-sm">
+                        <div className="flex flex-col">
+                          <span className="font-mono font-medium">{s.name}</span>
+                          {s.description && (
+                            <span className="text-[10px] text-muted-foreground">{s.description}</span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {selectedStrategy && (
+                <div className="bg-secondary/30 rounded-md p-2 text-[10px] text-muted-foreground">
+                  <span className="text-foreground font-medium">Selected:</span> {selectedStrategy.name}
+                  <br />
+                  <span className="text-primary">Note:</span> SL & TP conditions are defined in the strategy code
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-border pt-4 space-y-3">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Execution Settings</p>
+              
+              <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Algo Timeframe *</Label>
+                  <Label className="text-xs text-muted-foreground">Timeframe *</Label>
                   <Select value={algoTimeframe} onValueChange={setAlgoTimeframe}>
                     <SelectTrigger className="h-9 text-xs font-mono bg-secondary border-border">
                       <SelectValue />
@@ -144,50 +210,11 @@ export default function AlgoTradeDialog({ open, onClose, strategyName, symbol }:
                     <SelectContent className="bg-popover border-border">
                       {SIGNAL_TYPES.map(st => (
                         <SelectItem key={st.value} value={st.value} className="text-xs">
-                          <div className="flex flex-col">
-                            <span className="font-medium">{st.label}</span>
-                          </div>
+                          {st.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
-
-              <div className="bg-secondary/30 rounded-md p-2 text-[10px] text-muted-foreground">
-                {signalType === 'both' && '✓ Bot will execute both BUY and SELL signals from strategy'}
-                {signalType === 'buy' && '✓ Bot will only execute BUY signals (long entries)'}
-                {signalType === 'sell' && '✓ Bot will only execute SELL signals (exits/shorts)'}
-              </div>
-            </div>
-
-            <div className="border-t border-border pt-4 space-y-3">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Risk Management</p>
-              
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Stop Loss (%)</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    value={stopLoss}
-                    onChange={e => setStopLoss(e.target.value)}
-                    placeholder="1.0"
-                    className="h-9 text-xs font-mono bg-secondary border-border"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Target (%)</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    value={target}
-                    onChange={e => setTarget(e.target.value)}
-                    placeholder="2.0"
-                    className="h-9 text-xs font-mono bg-secondary border-border"
-                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Quantity</Label>
@@ -203,10 +230,10 @@ export default function AlgoTradeDialog({ open, onClose, strategyName, symbol }:
                 </div>
               </div>
 
-              <div className="bg-secondary/30 rounded-md p-2 text-[10px] text-muted-foreground flex gap-4">
-                <span className="text-loss">SL: -{stopLoss}%</span>
-                <span className="text-profit">Target: +{target}%</span>
-                <span>R:R = 1:{(parseFloat(target) / parseFloat(stopLoss) || 0).toFixed(1)}</span>
+              <div className="bg-secondary/30 rounded-md p-2 text-[10px] text-muted-foreground">
+                {signalType === 'both' && '✓ Bot will execute both BUY signals and exit on TP/SL from strategy'}
+                {signalType === 'buy' && '✓ Bot will only execute BUY signals (long entries)'}
+                {signalType === 'sell' && '✓ Bot will only execute exit signals (TP_HIT/SL_HIT)'}
               </div>
             </div>
           </div>
@@ -215,6 +242,12 @@ export default function AlgoTradeDialog({ open, onClose, strategyName, symbol }:
         {/* Step 2: Broker Credentials */}
         {step === 'credentials' && (
           <div className="space-y-3 py-2">
+            <div className="bg-secondary/30 rounded-md p-2 text-xs font-mono mb-3">
+              <span className="text-muted-foreground">Strategy:</span> <span className="text-primary">{selectedStrategy?.name}</span>
+              <span className="text-muted-foreground ml-3">TF:</span> <span className="text-foreground">{algoTimeframe}</span>
+              <span className="text-muted-foreground ml-3">Qty:</span> <span className="text-foreground">{quantity}</span>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">API Key *</Label>
@@ -320,11 +353,11 @@ export default function AlgoTradeDialog({ open, onClose, strategyName, symbol }:
               <p className="text-xs text-muted-foreground mt-1">Welcome, <span className="text-primary font-mono">{userName}</span></p>
             </div>
             <div className="bg-secondary/50 rounded-md p-3 w-full text-xs font-mono space-y-1 mt-2">
-              <div className="flex justify-between"><span className="text-muted-foreground">Strategy</span><span className="text-foreground">{strategyName}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Strategy</span><span className="text-foreground">{selectedStrategy?.name}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Symbol</span><span className="text-foreground">{symbol}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Timeframe</span><span className="text-foreground">{algoTimeframe}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Signal</span><span className="text-foreground">{SIGNAL_TYPES.find(s => s.value === signalType)?.label}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">SL / Target</span><span><span className="text-loss">-{stopLoss}%</span> / <span className="text-profit">+{target}%</span></span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">SL / TP</span><span className="text-muted-foreground italic">Defined in strategy</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Qty</span><span className="text-foreground">{quantity}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Exchange</span><span className="text-foreground">{exchange}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Product</span><span className="text-foreground">{productType}</span></div>
@@ -346,10 +379,15 @@ export default function AlgoTradeDialog({ open, onClose, strategyName, symbol }:
         )}
 
         <DialogFooter className="gap-2">
-          {step === 'settings' && (
+          {step === 'strategy' && (
             <>
               <Button variant="outline" size="sm" onClick={handleClose} className="text-xs">Cancel</Button>
-              <Button size="sm" onClick={() => setStep('credentials')} className="text-xs gap-1.5">
+              <Button 
+                size="sm" 
+                onClick={() => setStep('credentials')} 
+                disabled={!canProceedToCredentials}
+                className="text-xs gap-1.5"
+              >
                 Next: Broker Login
                 <ArrowRight className="h-3.5 w-3.5" />
               </Button>
@@ -357,7 +395,7 @@ export default function AlgoTradeDialog({ open, onClose, strategyName, symbol }:
           )}
           {step === 'credentials' && (
             <>
-              <Button variant="outline" size="sm" onClick={() => setStep('settings')} className="text-xs gap-1">
+              <Button variant="outline" size="sm" onClick={() => setStep('strategy')} className="text-xs gap-1">
                 <ArrowLeft className="h-3 w-3" />
                 Back
               </Button>

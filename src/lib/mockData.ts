@@ -10,7 +10,7 @@ export interface CandleData {
 
 export interface Signal {
   time: string;
-  type: 'BUY' | 'SELL';
+  type: 'BUY' | 'TP_HIT' | 'SL_HIT';
   price: number;
 }
 
@@ -21,6 +21,7 @@ export interface Trade {
   entryPrice: number;
   exitPrice: number;
   type: 'LONG' | 'SHORT';
+  exitReason: 'TP_HIT' | 'SL_HIT';
   pnl: number;
   pnlPercent: number;
 }
@@ -98,6 +99,11 @@ export function generateCandles(symbol: string, days = 365): CandleData[] {
 export function generateSignals(candles: CandleData[]): Signal[] {
   const signals: Signal[] = [];
   let inPosition = false;
+  let entryPrice = 0;
+  
+  // Mock SL/TP from strategy: 1.5% SL, 2.5% TP
+  const slPercent = 1.5;
+  const tpPercent = 2.5;
   
   for (let i = 14; i < candles.length; i++) {
     // Simple RSI-like mock signal generation
@@ -108,9 +114,20 @@ export function generateSignals(candles: CandleData[]): Signal[] {
     if (!inPosition && current < avg * 0.98 && i % 7 === 0) {
       signals.push({ time: candles[i].time, type: 'BUY', price: current });
       inPosition = true;
-    } else if (inPosition && current > avg * 1.02 && i % 5 === 0) {
-      signals.push({ time: candles[i].time, type: 'SELL', price: current });
-      inPosition = false;
+      entryPrice = current;
+    } else if (inPosition) {
+      // Check TP hit
+      const pnlPercent = ((current - entryPrice) / entryPrice) * 100;
+      
+      if (pnlPercent >= tpPercent) {
+        signals.push({ time: candles[i].time, type: 'TP_HIT', price: current });
+        inPosition = false;
+        entryPrice = 0;
+      } else if (pnlPercent <= -slPercent) {
+        signals.push({ time: candles[i].time, type: 'SL_HIT', price: current });
+        inPosition = false;
+        entryPrice = 0;
+      }
     }
   }
   
@@ -121,10 +138,13 @@ export function generateTrades(signals: Signal[]): Trade[] {
   const trades: Trade[] = [];
   let id = 1;
   
-  for (let i = 0; i < signals.length - 1; i += 2) {
+  for (let i = 0; i < signals.length; i++) {
     const entry = signals[i];
-    const exit = signals[i + 1];
-    if (!entry || !exit) break;
+    if (entry.type !== 'BUY') continue;
+    
+    // Find next exit (TP_HIT or SL_HIT)
+    const exit = signals.slice(i + 1).find(s => s.type === 'TP_HIT' || s.type === 'SL_HIT');
+    if (!exit) break;
     
     const pnl = +(exit.price - entry.price).toFixed(2);
     const pnlPercent = +((pnl / entry.price) * 100).toFixed(2);
@@ -136,6 +156,7 @@ export function generateTrades(signals: Signal[]): Trade[] {
       entryPrice: entry.price,
       exitPrice: exit.price,
       type: 'LONG',
+      exitReason: exit.type as 'TP_HIT' | 'SL_HIT',
       pnl,
       pnlPercent,
     });

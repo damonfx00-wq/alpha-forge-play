@@ -142,14 +142,23 @@ export default function Index() {
       {hasResults && !isReplaying && (
         <button
           onClick={() => setShowResults(prev => !prev)}
-          className={`flex items-center justify-center gap-1.5 w-full py-1.5 border-t border-border text-xs font-mono transition-colors ${
+          className={`flex items-center justify-center gap-1.5 w-full py-2 border-t border-border text-xs font-mono font-semibold transition-colors ${
             showResults
-              ? 'bg-card text-muted-foreground hover:text-foreground'
+              ? 'bg-loss/10 text-loss hover:bg-loss/20'
               : 'bg-primary/10 text-primary hover:bg-primary/20'
           }`}
         >
-          {showResults ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-          {showResults ? 'Hide' : '▲ Show'} Strategy Report
+          {showResults ? (
+            <>
+              <ChevronDown className="h-4 w-4" />
+              ✕ Hide Metrics — Back to Full Chart
+            </>
+          ) : (
+            <>
+              <ChevronUp className="h-4 w-4" />
+              ▲ Show Strategy Report
+            </>
+          )}
         </button>
       )}
 

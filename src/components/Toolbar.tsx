@@ -1,4 +1,4 @@
-import { TrendingUp, Play, Code, RotateCcw } from 'lucide-react';
+import { TrendingUp, Play, Code, RotateCcw, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SYMBOLS, TIMEFRAMES } from '@/lib/mockData';
 import ThemeToggle from '@/components/ThemeToggle';

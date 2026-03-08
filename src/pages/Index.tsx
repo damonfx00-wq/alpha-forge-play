@@ -165,7 +165,14 @@ export default function Index() {
             <div className="flex-1" />
             <button
               onClick={() => setShowResults(false)}
-              className="p-1.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ChevronDown className="h-3.5 w-3.5" />
+              Hide Metrics
+            </button>
+            <button
+              onClick={() => setShowResults(false)}
+              className="p-1.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors ml-1"
               title="Close"
             >
               <X className="h-4 w-4" />

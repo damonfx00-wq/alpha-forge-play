@@ -22,6 +22,7 @@ export default function Index() {
   const [strategyName, setStrategyName] = useState<string | null>('rsi_strategy');
   const [showManager, setShowManager] = useState(false);
   const [showReplayDialog, setShowReplayDialog] = useState(false);
+  const [showAlgoTrade, setShowAlgoTrade] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [hasResults, setHasResults] = useState(true);

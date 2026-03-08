@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import Toolbar from '@/components/Toolbar';
 import CandlestickChart from '@/components/CandlestickChart';
 import MetricsPanel from '@/components/MetricsPanel';
@@ -21,6 +22,7 @@ export default function Index() {
   const [showManager, setShowManager] = useState(false);
   const [showReplayDialog, setShowReplayDialog] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [hasResults, setHasResults] = useState(true);
 
   // Replay state - live candle streaming
@@ -133,7 +135,18 @@ export default function Index() {
         )}
       </div>
 
+      {/* Toggle button for results panel */}
       {hasResults && !isReplaying && (
+        <button
+          onClick={() => setShowResults(prev => !prev)}
+          className="flex items-center justify-center gap-1.5 w-full py-1 bg-card border-t border-border text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {showResults ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+          {showResults ? 'Hide' : 'Show'} Strategy Report
+        </button>
+      )}
+
+      {hasResults && !isReplaying && showResults && (
         <div className="border-t border-border bg-background">
           <div className="flex items-center gap-1 px-4 pt-2 border-b border-border">
             <span className="text-xs font-display font-semibold text-foreground px-3 py-2">

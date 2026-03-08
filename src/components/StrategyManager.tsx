@@ -158,6 +158,34 @@ export default function StrategyManager({ open, onClose, onApply }: StrategyMana
           </div>
         ) : (
           <div className="flex-1 overflow-auto space-y-3">
+            {/* Example reference */}
+            <details className="group">
+              <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
+                <ChevronRight className="h-3 w-3 group-open:rotate-90 transition-transform" />
+                How to write a strategy (example)
+              </summary>
+              <pre className="mt-2 p-3 bg-secondary/80 border border-border/50 rounded text-[11px] font-mono text-muted-foreground overflow-x-auto whitespace-pre">{`import pandas as pd
+
+def run_strategy(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Input:  df with columns: timestamp, open, high, low, close, volume
+    Output: df with added 'signal' column: 'BUY', 'SELL', or None
+    """
+    # Calculate RSI
+    delta = df['close'].diff()
+    gain = delta.where(delta > 0, 0).rolling(14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+    rs = gain / loss
+    df['rsi'] = 100 - (100 / (1 + rs))
+
+    # Generate signals
+    df['signal'] = None
+    df.loc[df['rsi'] < 30, 'signal'] = 'BUY'
+    df.loc[df['rsi'] > 70, 'signal'] = 'SELL'
+
+    return df`}</pre>
+            </details>
+
             <Input
               placeholder="Strategy name (e.g. rsi_reversal)"
               value={name}

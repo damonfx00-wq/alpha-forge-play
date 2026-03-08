@@ -1,11 +1,33 @@
 import { useEffect, useRef } from 'react';
-import { createChart, CandlestickSeries, HistogramSeries, createSeriesMarkers, type IChartApi, type ISeriesApi, type SeriesMarker, type Time, type CandlestickData } from 'lightweight-charts';
+import { createChart, CandlestickSeries, HistogramSeries, createSeriesMarkers, type IChartApi, type ISeriesApi, type SeriesMarker, type Time } from 'lightweight-charts';
 import type { CandleData, Signal } from '@/lib/mockData';
+import { useTheme } from '@/hooks/use-theme';
 
 interface CandlestickChartProps {
   candles: CandleData[];
   signals: Signal[];
 }
+
+const THEMES = {
+  dark: {
+    bg: '#131722',
+    text: '#848e9c',
+    grid: '#1e222d',
+    crosshair: '#4c525e',
+    scaleBorder: '#2a2e39',
+    volumeUp: 'rgba(34,197,94,0.3)',
+    volumeDown: 'rgba(239,68,68,0.3)',
+  },
+  light: {
+    bg: '#ffffff',
+    text: '#555555',
+    grid: '#eeeeee',
+    crosshair: '#aaaaaa',
+    scaleBorder: '#dddddd',
+    volumeUp: 'rgba(34,197,94,0.2)',
+    volumeDown: 'rgba(239,68,68,0.2)',
+  },
+};
 
 export default function CandlestickChart({ candles, signals }: CandlestickChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -14,16 +36,18 @@ export default function CandlestickChart({ candles, signals }: CandlestickChartP
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
   const roRef = useRef<ResizeObserver | null>(null);
   const prevCandlesKey = useRef<string>('');
+  const { theme } = useTheme();
 
-  // Create/recreate chart only when candles change
+  // Create/recreate chart when candles or theme change
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const key = candles.length > 0 ? `${candles[0].time}-${candles[candles.length - 1].time}-${candles.length}` : '';
+    const t = THEMES[theme];
+    const key = `${candles.length > 0 ? `${candles[0].time}-${candles[candles.length - 1].time}-${candles.length}` : ''}-${theme}`;
     if (key === prevCandlesKey.current && chartRef.current) return;
     prevCandlesKey.current = key;
 
-    // Cleanup old chart
+    // Cleanup
     if (roRef.current) roRef.current.disconnect();
     if (chartRef.current) {
       try { chartRef.current.remove(); } catch {}
@@ -34,26 +58,26 @@ export default function CandlestickChart({ candles, signals }: CandlestickChartP
       width: containerRef.current.clientWidth,
       height: containerRef.current.clientHeight,
       layout: {
-        background: { color: '#131722' },
-        textColor: '#848e9c',
+        background: { color: t.bg },
+        textColor: t.text,
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: '#1e222d' },
-        horzLines: { color: '#1e222d' },
+        vertLines: { color: t.grid },
+        horzLines: { color: t.grid },
       },
       crosshair: {
         mode: 0,
-        vertLine: { color: '#4c525e', width: 1, style: 3, labelBackgroundColor: '#2a2e39' },
-        horzLine: { color: '#4c525e', width: 1, style: 3, labelBackgroundColor: '#2a2e39' },
+        vertLine: { color: t.crosshair, width: 1, style: 3, labelBackgroundColor: t.scaleBorder },
+        horzLine: { color: t.crosshair, width: 1, style: 3, labelBackgroundColor: t.scaleBorder },
       },
       rightPriceScale: {
-        borderColor: '#2a2e39',
+        borderColor: t.scaleBorder,
         scaleMargins: { top: 0.1, bottom: 0.25 },
       },
       timeScale: {
-        borderColor: '#2a2e39',
+        borderColor: t.scaleBorder,
         timeVisible: false,
         secondsVisible: false,
       },
@@ -94,7 +118,7 @@ export default function CandlestickChart({ candles, signals }: CandlestickChartP
       candles.map(c => ({
         time: c.time as Time,
         value: c.volume,
-        color: c.close >= c.open ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)',
+        color: c.close >= c.open ? t.volumeUp : t.volumeDown,
       }))
     );
 
@@ -120,9 +144,9 @@ export default function CandlestickChart({ candles, signals }: CandlestickChartP
       volumeSeriesRef.current = null;
       prevCandlesKey.current = '';
     };
-  }, [candles]);
+  }, [candles, theme]);
 
-  // Update markers when signals change (without recreating chart)
+  // Update markers when signals change
   useEffect(() => {
     if (!candleSeriesRef.current) return;
     if (signals.length > 0) {

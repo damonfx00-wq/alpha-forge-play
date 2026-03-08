@@ -1,6 +1,7 @@
 import { TrendingUp, Play, Code, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SYMBOLS, TIMEFRAMES } from '@/lib/mockData';
+import ThemeToggle from '@/components/ThemeToggle';
 import {
   Select,
   SelectContent,
@@ -16,7 +17,8 @@ interface ToolbarProps {
   onTimeframeChange: (t: string) => void;
   onOpenStrategies: () => void;
   onRunBacktest: () => void;
-  onToggleReplay: () => void;
+  onOpenReplay: () => void;
+  onStopReplay: () => void;
   isRunning: boolean;
   isReplaying: boolean;
   strategyName: string | null;
@@ -29,7 +31,8 @@ export default function Toolbar({
   onTimeframeChange,
   onOpenStrategies,
   onRunBacktest,
-  onToggleReplay,
+  onOpenReplay,
+  onStopReplay,
   isRunning,
   isReplaying,
   strategyName,
@@ -76,6 +79,8 @@ export default function Toolbar({
         </span>
       )}
 
+      <ThemeToggle />
+
       <Button variant="outline" size="sm" onClick={onOpenStrategies} className="h-8 text-xs gap-1.5">
         <Code className="h-3.5 w-3.5" />
         Strategies
@@ -84,12 +89,12 @@ export default function Toolbar({
       <Button
         variant="outline"
         size="sm"
-        onClick={onToggleReplay}
+        onClick={isReplaying ? onStopReplay : onOpenReplay}
         disabled={!strategyName}
-        className={`h-8 text-xs gap-1.5 ${isReplaying ? 'border-primary text-primary' : ''}`}
+        className={`h-8 text-xs gap-1.5 ${isReplaying ? 'border-destructive text-destructive' : ''}`}
       >
         <RotateCcw className="h-3.5 w-3.5" />
-        {isReplaying ? 'Stop Replay' : 'Replay'}
+        {isReplaying ? 'Stop' : 'Replay'}
       </Button>
 
       <Button size="sm" onClick={onRunBacktest} disabled={isRunning} className="h-8 text-xs gap-1.5">

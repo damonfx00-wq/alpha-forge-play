@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { createChart, CandlestickSeries, HistogramSeries, createSeriesMarkers, type IChartApi, type Time } from 'lightweight-charts';
+import { useEffect, useRef } from 'react';
+import { createChart, CandlestickSeries, HistogramSeries, createSeriesMarkers, type IChartApi, type ISeriesApi, type SeriesMarker, type Time, type CandlestickData } from 'lightweight-charts';
 import type { CandleData, Signal } from '@/lib/mockData';
 
 interface CandlestickChartProps {
@@ -10,12 +10,23 @@ interface CandlestickChartProps {
 export default function CandlestickChart({ candles, signals }: CandlestickChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
+  const roRef = useRef<ResizeObserver | null>(null);
+  const prevCandlesKey = useRef<string>('');
 
-  const initChart = useCallback(() => {
+  // Create/recreate chart only when candles change
+  useEffect(() => {
     if (!containerRef.current) return;
 
+    const key = candles.length > 0 ? `${candles[0].time}-${candles[candles.length - 1].time}-${candles.length}` : '';
+    if (key === prevCandlesKey.current && chartRef.current) return;
+    prevCandlesKey.current = key;
+
+    // Cleanup old chart
+    if (roRef.current) roRef.current.disconnect();
     if (chartRef.current) {
-      chartRef.current.remove();
+      try { chartRef.current.remove(); } catch {}
       chartRef.current = null;
     }
 
@@ -50,7 +61,6 @@ export default function CandlestickChart({ candles, signals }: CandlestickChartP
 
     chartRef.current = chart;
 
-    // Candlestick series
     const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#22c55e',
       downColor: '#ef4444',
@@ -60,17 +70,16 @@ export default function CandlestickChart({ candles, signals }: CandlestickChartP
       wickUpColor: '#22c55e',
     });
 
-    const chartData = candles.map(c => ({
+    candleSeries.setData(candles.map(c => ({
       time: c.time as Time,
       open: c.open,
       high: c.high,
       low: c.low,
       close: c.close,
-    }));
+    })));
 
-    candleSeries.setData(chartData);
+    candleSeriesRef.current = candleSeries;
 
-    // Volume series
     const volumeSeries = chart.addSeries(HistogramSeries, {
       color: '#26a69a',
       priceFormat: { type: 'volume' as const },
@@ -89,18 +98,7 @@ export default function CandlestickChart({ candles, signals }: CandlestickChartP
       }))
     );
 
-    // Add markers for signals
-    if (signals.length > 0) {
-      const markers = signals.map(s => ({
-        time: s.time as Time,
-        position: s.type === 'BUY' ? 'belowBar' as const : 'aboveBar' as const,
-        color: s.type === 'BUY' ? '#22c55e' : '#ef4444',
-        shape: s.type === 'BUY' ? 'arrowUp' as const : 'arrowDown' as const,
-        text: s.type,
-      }));
-      createSeriesMarkers(candleSeries, markers);
-    }
-
+    volumeSeriesRef.current = volumeSeries;
     chart.timeScale().fitContent();
 
     const ro = new ResizeObserver(() => {
@@ -112,17 +110,34 @@ export default function CandlestickChart({ candles, signals }: CandlestickChartP
       }
     });
     ro.observe(containerRef.current);
+    roRef.current = ro;
 
     return () => {
       ro.disconnect();
-      chart.remove();
+      try { chart.remove(); } catch {}
+      chartRef.current = null;
+      candleSeriesRef.current = null;
+      volumeSeriesRef.current = null;
+      prevCandlesKey.current = '';
     };
-  }, [candles, signals]);
+  }, [candles]);
 
+  // Update markers when signals change (without recreating chart)
   useEffect(() => {
-    const cleanup = initChart();
-    return () => cleanup?.();
-  }, [initChart]);
+    if (!candleSeriesRef.current) return;
+    if (signals.length > 0) {
+      const markers: SeriesMarker<Time>[] = signals.map(s => ({
+        time: s.time as Time,
+        position: s.type === 'BUY' ? 'belowBar' as const : 'aboveBar' as const,
+        color: s.type === 'BUY' ? '#22c55e' : '#ef4444',
+        shape: s.type === 'BUY' ? 'arrowUp' as const : 'arrowDown' as const,
+        text: s.type,
+      }));
+      createSeriesMarkers(candleSeriesRef.current, markers);
+    } else {
+      createSeriesMarkers(candleSeriesRef.current, []);
+    }
+  }, [signals]);
 
   return (
     <div ref={containerRef} className="w-full h-full min-h-[400px] bg-chart-bg rounded-md overflow-hidden" />

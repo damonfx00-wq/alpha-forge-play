@@ -21,6 +21,7 @@ export default function Index() {
   const [showManager, setShowManager] = useState(false);
   const [showReplayDialog, setShowReplayDialog] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [hasResults, setHasResults] = useState(true);
 
   // Replay state - live candle streaming

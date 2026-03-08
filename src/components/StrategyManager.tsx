@@ -158,30 +158,57 @@ export default function StrategyManager({ open, onClose, onApply }: StrategyMana
           </div>
         ) : (
           <div className="flex-1 overflow-auto space-y-3">
-            {/* Example reference */}
+          {/* Example reference */}
             <details className="group">
               <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
                 <ChevronRight className="h-3 w-3 group-open:rotate-90 transition-transform" />
-                How to write a strategy (example)
+                How to write a strategy (example with SL/TP)
               </summary>
               <pre className="mt-2 p-3 bg-secondary/80 border border-border/50 rounded text-[11px] font-mono text-muted-foreground overflow-x-auto whitespace-pre">{`import pandas as pd
 
 def run_strategy(df: pd.DataFrame) -> pd.DataFrame:
     """
     Input:  df with columns: timestamp, open, high, low, close, volume
-    Output: df with added 'signal' column: 'BUY', 'SELL', or None
+    Output: df with 'signal' column: 'BUY', 'TP_HIT', 'SL_HIT', or None
+    
+    IMPORTANT: Define your SL/TP conditions in the strategy!
     """
-    # Calculate RSI
+    # === STRATEGY PARAMETERS ===
+    STOP_LOSS_PERCENT = 1.5    # Exit if price drops 1.5% from entry
+    TAKE_PROFIT_PERCENT = 2.5  # Exit if price rises 2.5% from entry
+    
+    # Calculate RSI for entry signals
     delta = df['close'].diff()
     gain = delta.where(delta > 0, 0).rolling(14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
     rs = gain / loss
     df['rsi'] = 100 - (100 / (1 + rs))
 
-    # Generate signals
     df['signal'] = None
-    df.loc[df['rsi'] < 30, 'signal'] = 'BUY'
-    df.loc[df['rsi'] > 70, 'signal'] = 'SELL'
+    in_position = False
+    entry_price = 0
+    
+    for i in range(len(df)):
+        if not in_position:
+            # BUY condition: RSI oversold
+            if df['rsi'].iloc[i] < 30:
+                df.loc[df.index[i], 'signal'] = 'BUY'
+                in_position = True
+                entry_price = df['close'].iloc[i]
+        else:
+            current_price = df['close'].iloc[i]
+            pnl_percent = ((current_price - entry_price) / entry_price) * 100
+            
+            # Check TAKE PROFIT condition
+            if pnl_percent >= TAKE_PROFIT_PERCENT:
+                df.loc[df.index[i], 'signal'] = 'TP_HIT'
+                in_position = False
+                entry_price = 0
+            # Check STOP LOSS condition
+            elif pnl_percent <= -STOP_LOSS_PERCENT:
+                df.loc[df.index[i], 'signal'] = 'SL_HIT'
+                in_position = False
+                entry_price = 0
 
     return df`}</pre>
             </details>

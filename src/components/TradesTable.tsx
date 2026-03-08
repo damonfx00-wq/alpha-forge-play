@@ -20,6 +20,7 @@ export default function TradesTable({ trades }: TradesTableProps) {
               <th className="text-right px-3 py-2 text-muted-foreground font-medium">Entry Price</th>
               <th className="text-left px-3 py-2 text-muted-foreground font-medium">Exit Date</th>
               <th className="text-right px-3 py-2 text-muted-foreground font-medium">Exit Price</th>
+              <th className="text-center px-3 py-2 text-muted-foreground font-medium">Exit Reason</th>
               <th className="text-right px-3 py-2 text-muted-foreground font-medium">P&L</th>
               <th className="text-right px-3 py-2 text-muted-foreground font-medium">P&L %</th>
             </tr>
@@ -39,6 +40,13 @@ export default function TradesTable({ trades }: TradesTableProps) {
                 <td className="px-3 py-2 text-right text-foreground">₹{t.entryPrice.toFixed(2)}</td>
                 <td className="px-3 py-2 text-muted-foreground">{t.exitDate}</td>
                 <td className="px-3 py-2 text-right text-foreground">₹{t.exitPrice.toFixed(2)}</td>
+                <td className="px-3 py-2 text-center">
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                    t.exitReason === 'TP_HIT' ? 'bg-profit/20 text-profit' : 'bg-loss/20 text-loss'
+                  }`}>
+                    {t.exitReason === 'TP_HIT' ? '🎯 TP HIT' : '🛑 SL HIT'}
+                  </span>
+                </td>
                 <td className={`px-3 py-2 text-right ${t.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
                   ₹{t.pnl.toFixed(2)}
                 </td>

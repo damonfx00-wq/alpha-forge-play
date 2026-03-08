@@ -7,6 +7,7 @@ import TradesTable from '@/components/TradesTable';
 import AnalyticsCharts from '@/components/AnalyticsCharts';
 import StrategyManager from '@/components/StrategyManager';
 import ReplayControls from '@/components/ReplayControls';
+import AlgoTradeDialog from '@/components/AlgoTradeDialog';
 import {
   generateCandles,
   generateSignals,
@@ -21,6 +22,7 @@ export default function Index() {
   const [strategyName, setStrategyName] = useState<string | null>('rsi_strategy');
   const [showManager, setShowManager] = useState(false);
   const [showReplayDialog, setShowReplayDialog] = useState(false);
+  const [showAlgoTrade, setShowAlgoTrade] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [hasResults, setHasResults] = useState(true);
@@ -115,6 +117,7 @@ export default function Index() {
         onRunBacktest={handleRunBacktest}
         onOpenReplay={() => setShowReplayDialog(true)}
         onStopReplay={stopReplay}
+        onOpenAlgoTrade={() => setShowAlgoTrade(true)}
         isRunning={isRunning}
         isReplaying={isReplaying}
         strategyName={strategyName}
@@ -191,6 +194,13 @@ export default function Index() {
         onStartReplay={startReplay}
         minDate={minDate}
         maxDate={maxDate}
+      />
+
+      <AlgoTradeDialog
+        open={showAlgoTrade}
+        onClose={() => setShowAlgoTrade(false)}
+        strategyName={strategyName}
+        symbol={symbol}
       />
     </div>
   );

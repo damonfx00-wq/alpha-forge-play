@@ -1,4 +1,4 @@
-import { TrendingUp, Play, Code, RotateCcw } from 'lucide-react';
+import { TrendingUp, Play, Code, RotateCcw, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SYMBOLS, TIMEFRAMES } from '@/lib/mockData';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -19,6 +19,7 @@ interface ToolbarProps {
   onRunBacktest: () => void;
   onOpenReplay: () => void;
   onStopReplay: () => void;
+  onOpenAlgoTrade: () => void;
   isRunning: boolean;
   isReplaying: boolean;
   strategyName: string | null;
@@ -33,6 +34,7 @@ export default function Toolbar({
   onRunBacktest,
   onOpenReplay,
   onStopReplay,
+  onOpenAlgoTrade,
   isRunning,
   isReplaying,
   strategyName,
@@ -100,6 +102,16 @@ export default function Toolbar({
       <Button size="sm" onClick={onRunBacktest} disabled={isRunning} className="h-8 text-xs gap-1.5">
         <Play className="h-3.5 w-3.5" />
         {isRunning ? 'Running...' : 'Run Backtest'}
+      </Button>
+
+      <Button
+        size="sm"
+        onClick={onOpenAlgoTrade}
+        disabled={!strategyName}
+        className="h-8 text-xs gap-1.5 bg-profit hover:bg-profit/90 text-white"
+      >
+        <Zap className="h-3.5 w-3.5" />
+        Algo Trade
       </Button>
     </div>
   );

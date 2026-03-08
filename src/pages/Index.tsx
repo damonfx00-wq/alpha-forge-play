@@ -117,6 +117,7 @@ export default function Index() {
         onRunBacktest={handleRunBacktest}
         onOpenReplay={() => setShowReplayDialog(true)}
         onStopReplay={stopReplay}
+        onOpenAlgoTrade={() => setShowAlgoTrade(true)}
         isRunning={isRunning}
         isReplaying={isReplaying}
         strategyName={strategyName}

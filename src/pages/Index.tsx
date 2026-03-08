@@ -155,6 +155,14 @@ export default function Index() {
             <span className="text-[10px] font-mono text-muted-foreground ml-2">
               {strategyName || 'No strategy'} · {symbol}
             </span>
+            <div className="flex-1" />
+            <button
+              onClick={() => setShowResults(false)}
+              className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              title="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
           <div className="p-4 space-y-4 overflow-auto max-h-[45vh]">
             <MetricsPanel metrics={metrics} />

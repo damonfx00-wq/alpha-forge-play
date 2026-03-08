@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, X } from 'lucide-react';
 import Toolbar from '@/components/Toolbar';
 import CandlestickChart from '@/components/CandlestickChart';
 import MetricsPanel from '@/components/MetricsPanel';

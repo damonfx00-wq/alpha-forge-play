@@ -98,7 +98,7 @@ export default function CandlestickChart({ candles, signals }: CandlestickChartP
         shape: s.type === 'BUY' ? 'arrowUp' as const : 'arrowDown' as const,
         text: s.type,
       }));
-      candleSeries.setMarkers(markers);
+      createSeriesMarkers(candleSeries, markers);
     }
 
     chart.timeScale().fitContent();

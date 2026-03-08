@@ -1,4 +1,4 @@
-import { ChevronDown, Upload, Play, TrendingUp } from 'lucide-react';
+import { TrendingUp, Play, Code, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SYMBOLS, TIMEFRAMES } from '@/lib/mockData';
 import {
@@ -14,9 +14,11 @@ interface ToolbarProps {
   onSymbolChange: (s: string) => void;
   timeframe: string;
   onTimeframeChange: (t: string) => void;
-  onUpload: () => void;
+  onOpenStrategies: () => void;
   onRunBacktest: () => void;
+  onToggleReplay: () => void;
   isRunning: boolean;
+  isReplaying: boolean;
   strategyName: string | null;
 }
 
@@ -25,34 +27,31 @@ export default function Toolbar({
   onSymbolChange,
   timeframe,
   onTimeframeChange,
-  onUpload,
+  onOpenStrategies,
   onRunBacktest,
+  onToggleReplay,
   isRunning,
+  isReplaying,
   strategyName,
 }: ToolbarProps) {
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-card border-b border-border">
-      {/* Logo */}
       <div className="flex items-center gap-2 mr-4">
         <TrendingUp className="h-5 w-5 text-primary" />
         <span className="font-display font-bold text-foreground text-sm tracking-tight">StrategyLab</span>
       </div>
 
-      {/* Symbol selector */}
       <Select value={symbol} onValueChange={onSymbolChange}>
         <SelectTrigger className="w-[140px] h-8 text-xs font-mono bg-secondary border-border">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="bg-popover border-border">
           {SYMBOLS.map(s => (
-            <SelectItem key={s} value={s} className="text-xs font-mono">
-              {s}
-            </SelectItem>
+            <SelectItem key={s} value={s} className="text-xs font-mono">{s}</SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {/* Timeframes */}
       <div className="flex items-center gap-0.5 ml-2">
         {TIMEFRAMES.map(tf => (
           <button
@@ -71,20 +70,28 @@ export default function Toolbar({
 
       <div className="flex-1" />
 
-      {/* Strategy info */}
       {strategyName && (
         <span className="text-xs font-mono text-muted-foreground px-2 py-1 bg-secondary rounded">
           {strategyName}
         </span>
       )}
 
-      {/* Upload */}
-      <Button variant="outline" size="sm" onClick={onUpload} className="h-8 text-xs gap-1.5">
-        <Upload className="h-3.5 w-3.5" />
-        Upload Strategy
+      <Button variant="outline" size="sm" onClick={onOpenStrategies} className="h-8 text-xs gap-1.5">
+        <Code className="h-3.5 w-3.5" />
+        Strategies
       </Button>
 
-      {/* Run */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onToggleReplay}
+        disabled={!strategyName}
+        className={`h-8 text-xs gap-1.5 ${isReplaying ? 'border-primary text-primary' : ''}`}
+      >
+        <RotateCcw className="h-3.5 w-3.5" />
+        {isReplaying ? 'Stop Replay' : 'Replay'}
+      </Button>
+
       <Button size="sm" onClick={onRunBacktest} disabled={isRunning} className="h-8 text-xs gap-1.5">
         <Play className="h-3.5 w-3.5" />
         {isRunning ? 'Running...' : 'Run Backtest'}

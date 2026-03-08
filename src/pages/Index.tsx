@@ -139,10 +139,14 @@ export default function Index() {
       {hasResults && !isReplaying && (
         <button
           onClick={() => setShowResults(prev => !prev)}
-          className="flex items-center justify-center gap-1.5 w-full py-1 bg-card border-t border-border text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
+          className={`flex items-center justify-center gap-1.5 w-full py-1.5 border-t border-border text-xs font-mono transition-colors ${
+            showResults
+              ? 'bg-card text-muted-foreground hover:text-foreground'
+              : 'bg-primary/10 text-primary hover:bg-primary/20'
+          }`}
         >
           {showResults ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-          {showResults ? 'Hide' : 'Show'} Strategy Report
+          {showResults ? 'Hide' : '▲ Show'} Strategy Report
         </button>
       )}
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { createChart, CandlestickSeries, HistogramSeries, type IChartApi, type ISeriesApi, type CandlestickData, type Time } from 'lightweight-charts';
+import { createChart, CandlestickSeries, HistogramSeries, createSeriesMarkers, type IChartApi, type Time } from 'lightweight-charts';
 import type { CandleData, Signal } from '@/lib/mockData';
 
 interface CandlestickChartProps {

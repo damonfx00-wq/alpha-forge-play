@@ -34,6 +34,7 @@ export default function Toolbar({
   onRunBacktest,
   onOpenReplay,
   onStopReplay,
+  onOpenAlgoTrade,
   isRunning,
   isReplaying,
   strategyName,

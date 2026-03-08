@@ -195,6 +195,13 @@ export default function Index() {
         minDate={minDate}
         maxDate={maxDate}
       />
+
+      <AlgoTradeDialog
+        open={showAlgoTrade}
+        onClose={() => setShowAlgoTrade(false)}
+        strategyName={strategyName}
+        symbol={symbol}
+      />
     </div>
   );
 }

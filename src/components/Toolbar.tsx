@@ -103,6 +103,16 @@ export default function Toolbar({
         <Play className="h-3.5 w-3.5" />
         {isRunning ? 'Running...' : 'Run Backtest'}
       </Button>
+
+      <Button
+        size="sm"
+        onClick={onOpenAlgoTrade}
+        disabled={!strategyName}
+        className="h-8 text-xs gap-1.5 bg-profit hover:bg-profit/90 text-white"
+      >
+        <Zap className="h-3.5 w-3.5" />
+        Algo Trade
+      </Button>
     </div>
   );
 }

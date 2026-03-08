@@ -7,6 +7,7 @@ import TradesTable from '@/components/TradesTable';
 import AnalyticsCharts from '@/components/AnalyticsCharts';
 import StrategyManager from '@/components/StrategyManager';
 import ReplayControls from '@/components/ReplayControls';
+import AlgoTradeDialog from '@/components/AlgoTradeDialog';
 import {
   generateCandles,
   generateSignals,

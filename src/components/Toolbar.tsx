@@ -19,6 +19,7 @@ interface ToolbarProps {
   onRunBacktest: () => void;
   onOpenReplay: () => void;
   onStopReplay: () => void;
+  onOpenAlgoTrade: () => void;
   isRunning: boolean;
   isReplaying: boolean;
   strategyName: string | null;

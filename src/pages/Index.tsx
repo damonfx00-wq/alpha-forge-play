@@ -147,9 +147,9 @@ export default function Index() {
       )}
 
       {hasResults && !isReplaying && showResults && (
-        <div className="border-t border-border bg-background">
-          <div className="flex items-center gap-1 px-4 pt-2 border-b border-border">
-            <span className="text-xs font-display font-semibold text-foreground px-3 py-2">
+        <div className="border-t border-border bg-background flex flex-col" style={{ maxHeight: '55vh' }}>
+          <div className="flex items-center gap-1 px-4 py-2 border-b border-border shrink-0">
+            <span className="text-xs font-display font-semibold text-foreground px-2">
               Strategy Report
             </span>
             <span className="text-[10px] font-mono text-muted-foreground ml-2">
@@ -158,13 +158,13 @@ export default function Index() {
             <div className="flex-1" />
             <button
               onClick={() => setShowResults(false)}
-              className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              className="p-1.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
               title="Close"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="p-4 space-y-4 overflow-auto max-h-[45vh]">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <MetricsPanel metrics={metrics} />
             <AnalyticsCharts trades={trades} equityCurve={equityCurve} winRate={metrics.winRate} />
             <TradesTable trades={trades} />

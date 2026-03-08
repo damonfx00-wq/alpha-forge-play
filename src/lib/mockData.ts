@@ -36,6 +36,17 @@ export interface BacktestMetrics {
   maxDrawdown: number;
   profitFactor: number;
   netProfit: number;
+  sharpeRatio: number;
+  sortinoRatio: number;
+  avgHoldingDays: number;
+  maxConsecWins: number;
+  maxConsecLosses: number;
+  expectancy: number;
+  rewardRiskRatio: number;
+  largestWin: number;
+  largestLoss: number;
+  avgWinPercent: number;
+  avgLossPercent: number;
 }
 
 function seedRandom(seed: number) {
